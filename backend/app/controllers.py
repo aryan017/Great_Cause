@@ -13,7 +13,7 @@ razorpay_client=razorpay.Client(
 class CampaignList(Resource):
     def get(self):
         campaigns=Campaign.query.all()
-        return jsonify([c.__dict__ for c in campaigns if '_sa_instance_state' not in c.__dict__])
+        return jsonify([c.to_dict() for c in campaigns])
     
     def post(self):
         data=request.json
@@ -31,11 +31,56 @@ class CampaignList(Resource):
 
 class CampaignDetail(Resource):
     def get(self,id):
-        campaign=Campaign.get_or_404(id)
-        return jsonify(campaign.__dict__)
+        campaign=Campaign.query.get(id)
+        return jsonify(campaign.to_dict())
+    
+    def put(self,id):
+        data =request.json
+        campaign =Campaign.query.get(id)
+        campaign.title=data.get('title',campaign.title)
+        campaign.description=data.get('description',campaign.description)
+        campaign.goal_amount=data.get('goal_amount',campaign.goal_amount)
+        db.session.commit()
+        return jsonify({'msg' : 'Campaign  is Updated'})
+    
+    def delete(self,id):
+        campaign=Campaign.query.get_or_404(id)
+        db.session.delete(campaign)
+        db.session.commit()
+        return jsonify({"msg" : f"Campaign {id} is Deleted"})
+        
     
 class Donate(Resource):
-    pass
+    def post(self,id):
+        data=request.data
+        campaign=Campaign.query.get(id)
+        
+        try :
+            order_data={
+                "amount" : int(data['amount']),
+                "currency" : "INR",
+                "receipt" : f"campaign_{campaign.id}",
+                "payment_capture" : 1
+            }
+            
+            razorpay_order=razorpay_client.order.create(order_data)
+            
+            campaign.raised_amount+=data['amount']
+            db.session.commit()
+            
+            return jsonify({
+                'order_id' : razorpay_order['id'],
+                'amount' : razorpay_order['amount'],
+                'currency': razorpay_order['currency']
+            })
+            
+        except Exception as e : 
+            return jsonify({'error' : str(e)})
+        
 
 class ApproveCampaign(Resource):
     pass
+
+class Test_Route(Resource):
+    def get(self):
+        return jsonify({'msg':'Server is working'})
