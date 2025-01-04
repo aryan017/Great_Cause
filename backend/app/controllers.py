@@ -52,12 +52,13 @@ class CampaignDetail(Resource):
     
 class Donate(Resource):
     def post(self,id):
-        data=request.data
+        data=request.json
+        print(data)
         campaign=Campaign.query.get(id)
         
         try :
             order_data={
-                "amount" : int(data['amount']),
+                "amount" : int(data['amount']*100),
                 "currency" : "INR",
                 "receipt" : f"campaign_{campaign.id}",
                 "payment_capture" : 1
@@ -79,7 +80,11 @@ class Donate(Resource):
         
 
 class ApproveCampaign(Resource):
-    pass
+    def patch(self,id):
+        campaign=Campaign.query.get(id)
+        campaign.is_approved=True
+        db.session.commit()
+        return jsonify({'msg' : 'Campaign is Approved'})
 
 class Test_Route(Resource):
     def get(self):
