@@ -7,3 +7,5 @@ const API=axios.create({
 export const getCampaigns=() => API.get('/campaigns');
 export const createCampaigns=(data) => API.post('/campaigns',data);
 export const donateToCampaign=(id,amount) => API.post(`/campaigns/${id}/donate`,{amount})
+export const verifyPayment=(paymentData) => API.post('/payments/verify',paymentData,{
+    headers: { "Content-Type": "application/json" }})

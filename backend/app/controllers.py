@@ -85,6 +85,35 @@ class ApproveCampaign(Resource):
         campaign.is_approved=True
         db.session.commit()
         return jsonify({'msg' : 'Campaign is Approved'})
+    
+class VerifyPayment(Resource):
+    def post(self):
+        data=request.json
+        print(data)
+       # razorpay_order_id=data['razorpay_order_id']
+        razorpay_payment_id=data['razorpay_payment_id']
+       # razorpay_signature=data['razorpay_signature']
+        
+        try :
+            razorpay_client.utility.verify_payment_signature({
+               # "razorpay_order_id": razorpay_order_id,
+                "razorpay_payment_id" : razorpay_payment_id,
+               # "razorpay_signature" : razorpay_signature
+            })
+            
+            campaign_id=data["campaign_id"]
+            amount=data["amount"]/100
+            
+            campaign=Campaign.objects(id=campaign_id).first()
+            
+            if campaign :
+                campaign.raised_amount+=amount
+                campaign.save()
+            
+            return jsonify({'success': True,'msg' : "Payment is verified SuccessFully and Campaign is Updated SuccessFully"})
+        
+        except Exception as e:
+            return jsonify({'error' : str(e)})
 
 class Test_Route(Resource):
     def get(self):
