@@ -58,15 +58,14 @@ class Donate(Resource):
         
         try :
             order_data={
-                "amount" : int(data['amount']*100),
+                "amount" : int(float(data['amount']) * 100),
                 "currency" : "INR",
                 "receipt" : f"campaign_{campaign.id}",
                 "payment_capture" : 1
             }
             
             razorpay_order=razorpay_client.order.create(order_data)
-            
-            campaign.raised_amount+=data['amount']
+            campaign.raised_amount += float(data['amount'])
             db.session.commit()
             
             return jsonify({
@@ -90,15 +89,15 @@ class VerifyPayment(Resource):
     def post(self):
         data=request.json
         print(data)
-       # razorpay_order_id=data['razorpay_order_id']
+        razorpay_order_id=data['razorpay_order_id']
         razorpay_payment_id=data['razorpay_payment_id']
-       # razorpay_signature=data['razorpay_signature']
+        razorpay_signature=data['razorpay_signature']
         
         try :
             razorpay_client.utility.verify_payment_signature({
-               # "razorpay_order_id": razorpay_order_id,
+                "razorpay_order_id": razorpay_order_id,
                 "razorpay_payment_id" : razorpay_payment_id,
-               # "razorpay_signature" : razorpay_signature
+                "razorpay_signature" : razorpay_signature
             })
             
             campaign_id=data["campaign_id"]

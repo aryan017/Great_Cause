@@ -27,43 +27,64 @@ const CampaignForm=() => {
 
     return (
         <form onSubmit={handleSubmit} className="campaign-form">
-            <h2>Create a Campaign</h2>
-             <input
-             type="text"
-             name="title"
-             placeholder="Campaign Title"
-             value={formData.title}
-             onChange={handleChange}
-             required
-             />
+      <h2 className="form-title">Create Your Campaign 🚀</h2>
 
-             <textarea
-             name="description"
-             placeholder="Campaign Description"
-             value={formData.description}
-             onChange={handleChange}
-             required
-             />
+      <div className="form-group">
+        <label htmlFor="title">Campaign Title</label>
+        <input
+          type="text"
+          name="title"
+          id="title"
+          placeholder="Enter an eye-catching title"
+          value={formData.title}
+          onChange={handleChange}
+          required
+        />
+      </div>
 
-             <input
-             type="number"
-             name="goal_amount"
-             placeholder="Goal Amount(in Rs)"
-             value={formData.goal_amount}
-             onChange={handleChange}
-             required
-             />
+      <div className="form-group">
+        <label htmlFor="description">Description</label>
+        <textarea
+          name="description"
+          id="description"
+          placeholder="Tell your story to inspire contributors"
+          value={formData.description}
+          onChange={handleChange}
+          rows="4"
+          required
+        />
+      </div>
 
-             <input
-             type="text"
-             name="creator"
-             placeholder="Creator"
-             value={formData.creator}
-             onChange={handleChange}
-             required
-             />
-             <button type="submit">Create Compaign</button>
-        </form>
+      <div className="form-group">
+        <label htmlFor="goal_amount">Goal Amount (₹)</label>
+        <input
+          type="number"
+          name="goal_amount"
+          id="goal_amount"
+          placeholder="Set a target amount"
+          value={formData.goal_amount}
+          onChange={handleChange}
+          required
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="creator">Your Name</label>
+        <input
+          type="text"
+          name="creator"
+          id="creator"
+          placeholder="Enter your name"
+          value={formData.creator}
+          onChange={handleChange}
+          required
+        />
+      </div>
+
+      <button type="submit" className="submit-button">
+        Create Campaign ✨
+      </button>
+    </form>
     );
 }
 

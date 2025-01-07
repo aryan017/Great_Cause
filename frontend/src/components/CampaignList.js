@@ -19,6 +19,7 @@ const CampaignList=() => {
     const handleDonate=async(campaign,amount) => {
         try{
             const {data} =await donateToCampaign(campaign.id,amount);
+            console.log(data)
             const razorpayOptions={
                 key : process.env.REACT_APP_RAZORPAY_KEY_ID,
                 amount : data.amount,
@@ -28,6 +29,13 @@ const CampaignList=() => {
                 decription : "CrowdFunding Platform to Support Campaigns",
                 handler : async function (response){
                     try{
+                        console.log({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            campaign_id: campaign.id,
+                            amount: data.amount,
+                          });                          
                     await verifyPayment({
                     razorpay_order_id: response.razorpay_order_id,
                     razorpay_payment_id: response.razorpay_payment_id,
@@ -36,6 +44,7 @@ const CampaignList=() => {
                     amount: data.amount,
                     });
                     alert("Payment SucceFully");
+
                     const { data: updatedCampaigns } = await getCampaigns();
                     console.log(updatedCampaigns)
                     setCampaigns(updatedCampaigns);

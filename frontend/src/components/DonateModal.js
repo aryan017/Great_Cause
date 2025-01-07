@@ -2,7 +2,7 @@ import React,{useState} from "react";
 import '../index.css';
 
 const DonateModal=({campaign,onClose,onDonate}) => {
-       const [amount,setAmount]=useState("");
+       const [amount,setAmount]=useState(0);
         
        const handleSubmit=(e) => {
         e.preventDefault();
