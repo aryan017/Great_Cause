@@ -19,7 +19,8 @@ const CampaignList=() => {
     const handleDonate=async(campaign,amount) => {
         try{
             const {data} =await donateToCampaign(campaign.id,amount);
-            console.log(data)
+            console.log('Here is your fucking data',data)
+            console.log('Here is Fucking data order_id',data.order_id)
             const razorpayOptions={
                 key : process.env.REACT_APP_RAZORPAY_KEY_ID,
                 amount : data.amount,

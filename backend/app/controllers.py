@@ -1,14 +1,14 @@
 from flask import request,jsonify
 from flask_restful import Resource
+from dotenv import load_dotenv
 from .models import Campaign
 from . import db
 import os
 import razorpay
 
+load_dotenv() 
 
-razorpay_client=razorpay.Client(
-    auth=(os.getenv('RAZORPAY_KEY_ID'),os.getenv('RAZORPAY_SECRET'))
-)
+razorpay_client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
 
 class CampaignList(Resource):
     def get(self):
@@ -65,9 +65,8 @@ class Donate(Resource):
             }
             
             razorpay_order=razorpay_client.order.create(order_data)
-            campaign.raised_amount += float(data['amount'])
-            db.session.commit()
-            
+           
+            print("Razorpay Order Created:", razorpay_order)
             return jsonify({
                 'order_id' : razorpay_order['id'],
                 'amount' : razorpay_order['amount'],
@@ -88,7 +87,6 @@ class ApproveCampaign(Resource):
 class VerifyPayment(Resource):
     def post(self):
         data=request.json
-        print(data)
         razorpay_order_id=data['razorpay_order_id']
         razorpay_payment_id=data['razorpay_payment_id']
         razorpay_signature=data['razorpay_signature']
@@ -100,15 +98,15 @@ class VerifyPayment(Resource):
                 "razorpay_signature" : razorpay_signature
             })
             
-            campaign_id=data["campaign_id"]
-            amount=data["amount"]/100
             
-            campaign=Campaign.objects(id=campaign_id).first()
-            
-            if campaign :
-                campaign.raised_amount+=amount
-                campaign.save()
-            
+            campaign_id = data["campaign_id"]
+            amount = data["amount"] / 100 
+
+            campaign = Campaign.query.get(campaign_id)
+            if campaign:
+                campaign.raised_amount += amount
+                db.session.commit()
+               
             return jsonify({'success': True,'msg' : "Payment is verified SuccessFully and Campaign is Updated SuccessFully"})
         
         except Exception as e:
