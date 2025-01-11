@@ -1,2 +1,3 @@
-__pycache_/
-.env
+# Ignore environment files
+backend/.env
+frontend/.env
