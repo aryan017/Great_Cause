@@ -1,23 +1,84 @@
-import './App.css';
-import React from 'react';
-import {BrowserRouter as Router,Route,Link,Routes} from "react-router-dom";
-import Home from './pages/Home';
-import './index.css';
-import CreateCampaign from './pages/CreateCampaign';
+import React, { useState, useEffect } from "react";
+import { NavLink, Routes, Route, useNavigate } from "react-router-dom";
+import Home from "./pages/Home";
+import CreateCampaign from "./pages/CreateCampaign";
+import Login from "./auth/Login";
+import Register from "./auth/Register";
+import Profile from "./auth/Profile";
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetch("/api/validate-token", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((response) => {
+          if (response.ok) {
+            setIsLoggedIn(true);
+          } else {
+            localStorage.removeItem("token");
+            setIsLoggedIn(false);
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem("token");
+          setIsLoggedIn(false);
+        });
+    }
+  }, [isLoggedIn]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    navigate("/");
+  };
+
+  const ProtectedRoute = ({ element }) => {
+    return isLoggedIn ? element : <Login />;
+  };
+
   return (
     <div className="App">
-      <Router>
-        <nav>
-        <Link to="/">Home</Link>
-        <Link to="/create">Create Campaign</Link>
-        </nav>
-        <Routes>
-          <Route path='/' element={<Home/>}/>
-          <Route path='/create' element={<CreateCampaign/>}/>
-        </Routes>
-      </Router>
+      <nav>
+        <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>
+          Home
+        </NavLink>
+        {isLoggedIn ? (
+          <>
+            <NavLink to="/create" className={({ isActive }) => (isActive ? "active" : "")}>
+              Create Campaign
+            </NavLink>
+            <NavLink to="/profile" className={({ isActive }) => (isActive ? "active" : "")}>
+              Profile
+            </NavLink>
+            <div style={{ display: "inline-block", marginLeft: "10px" }}>
+              <button onClick={handleLogout} style={{ cursor: "pointer" }}>
+                Logout
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <NavLink to="/login" className={({ isActive }) => (isActive ? "active" : "")}>
+              Login
+            </NavLink>
+            <NavLink to="/register" className={({ isActive }) => (isActive ? "active" : "")}>
+              Register
+            </NavLink>
+          </>
+        )}
+      </nav>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/create" element={<ProtectedRoute element={<CreateCampaign />} />} />
+        <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
     </div>
   );
 }

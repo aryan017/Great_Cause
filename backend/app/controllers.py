@@ -1,8 +1,10 @@
 from flask import request,jsonify
 from flask_restful import Resource
+from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity
 from dotenv import load_dotenv
-from .models import Campaign
+from .models import Campaign, User
 from . import db
+import json
 import os
 import razorpay
 
@@ -15,13 +17,16 @@ class CampaignList(Resource):
         campaigns=Campaign.query.all()
         return jsonify([c.to_dict() for c in campaigns])
     
+    @jwt_required() 
     def post(self):
+        user_identity = json.loads(get_jwt_identity())
+        print(user_identity)
         data=request.json
         new_campaign=Campaign(
             title=data['title'],
             description=data['description'],
             goal_amount=data['goal_amount'],
-            creator=data['creator']
+            creator_id=user_identity['id']  # Linking campaign to the logged-in user
         )
         
         db.session.add(new_campaign)
@@ -34,23 +39,39 @@ class CampaignDetail(Resource):
         campaign=Campaign.query.get(id)
         return jsonify(campaign.to_dict())
     
+    @jwt_required()
     def put(self,id):
+        user_identity = json.loads(get_jwt_identity())
+        print(user_identity)
+       ## print("Headers:", request.headers) 
         data =request.json
         campaign =Campaign.query.get(id)
+        
+        # Check if the logged-in user is the creator of the campaign
+        if campaign.creator_id != user_identity['id']:
+            return jsonify({"msg": "Unauthorized to update this campaign"})
+        
         campaign.title=data.get('title',campaign.title)
         campaign.description=data.get('description',campaign.description)
         campaign.goal_amount=data.get('goal_amount',campaign.goal_amount)
         db.session.commit()
         return jsonify({'msg' : 'Campaign  is Updated'})
     
+    @jwt_required()
     def delete(self,id):
+        user_identity = json.loads(get_jwt_identity())
         campaign=Campaign.query.get_or_404(id)
+         # Check if the logged-in user is the creator of the campaign
+        if campaign.creator_id != user_identity['id']:
+            return jsonify({"msg": "Unauthorized to delete this campaign"}), 403
+        
         db.session.delete(campaign)
         db.session.commit()
         return jsonify({"msg" : f"Campaign {id} is Deleted"})
         
     
 class Donate(Resource):
+    @jwt_required()
     def post(self,id):
         data=request.json
         print(data)
@@ -78,6 +99,7 @@ class Donate(Resource):
         
 
 class ApproveCampaign(Resource):
+    @jwt_required()
     def patch(self,id):
         campaign=Campaign.query.get(id)
         campaign.is_approved=True
@@ -85,6 +107,7 @@ class ApproveCampaign(Resource):
         return jsonify({'msg' : 'Campaign is Approved'})
     
 class VerifyPayment(Resource):
+    @jwt_required()
     def post(self):
         data=request.json
         razorpay_order_id=data['razorpay_order_id']
@@ -111,6 +134,64 @@ class VerifyPayment(Resource):
         
         except Exception as e:
             return jsonify({'error' : str(e)})
+        
+class Register(Resource):
+    def post(self):
+        data=request.json
+        if not data.get('username') or not data.get('email') or not data.get('password'):
+            return jsonify({'msg' : "Missing Required Fields"})
+        
+        if User.query.filter_by(username=data['username']).first() or User.query.filter_by(email=data['email']).first() :
+            return jsonify({'msg' : "Username or Email Already Exists"})
+        
+        user =User(username=data['username'],email=data['email'])
+        user.set_password(data['password'])
+        db.session.add(user)
+        db.session.commit()
+             
+        return jsonify({'msg' : 'User Registered SuccessFully'}) 
+    
+class Login(Resource):
+    def post(self):
+        data=request.json
+        user=User.query.filter_by(email=data['email']).first()
+        
+        if not user or not user.check_password(data.get('password')):
+            return jsonify({'msg' : 'Invalid Email or Password'})
+        
+        access_token = create_access_token(identity=json.dumps({'id': user.id, 'username': user.username}))
+        return jsonify({'token' : access_token , 'user' : user.to_dict()})
+    
+class Profile(Resource):
+    @jwt_required()
+    def get(self):
+        user_id =get_jwt_identity()
+        user = User.query.get_or_404(user_id, description="User not found")
+        return jsonify(user.to_dict())
+
+    @jwt_required()
+    def put(self):
+        user_id = get_jwt_identity()
+        user = User.query.get_or_404(user_id, description="User not found")
+        
+        try:
+            data = request.get_json()
+            user.username = data.get('username', user.username)
+            user.email = data.get('email', user.email)
+            db.session.commit()
+            return jsonify({'message': 'Profile updated successfully', 'user': user.to_dict()})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': 'Failed to update profile', 'details': str(e)}), 500
+
+
+class UserCampaigns(Resource):
+    @jwt_required()
+    def get(self):
+        user_id =get_jwt_identity()
+        campaigns = Campaign.query.filter_by(creator_id=user_id).all()
+        return jsonify({'campaigns': [campaign.to_dict() for campaign in campaigns]})
+    
 
 class Test_Route(Resource):
     def get(self):
