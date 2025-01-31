@@ -1,10 +1,13 @@
-from flask import request,jsonify
+from flask import request,jsonify,send_file
 from flask_restful import Resource
 from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity
 from dotenv import load_dotenv
-from .models import Campaign, User
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from .models import Campaign, User, Transaction
 from . import db
 import json
+import io
 import os
 import razorpay
 
@@ -20,7 +23,6 @@ class CampaignList(Resource):
     @jwt_required() 
     def post(self):
         user_identity = json.loads(get_jwt_identity())
-        print(user_identity)
         data=request.json
         new_campaign=Campaign(
             title=data['title'],
@@ -42,7 +44,6 @@ class CampaignDetail(Resource):
     @jwt_required()
     def put(self,id):
         user_identity = json.loads(get_jwt_identity())
-        print(user_identity)
        ## print("Headers:", request.headers) 
         data =request.json
         campaign =Campaign.query.get(id)
@@ -74,7 +75,6 @@ class Donate(Resource):
     @jwt_required()
     def post(self,id):
         data=request.json
-        print(data)
         campaign=Campaign.query.get(id)
         
         try :
@@ -87,7 +87,6 @@ class Donate(Resource):
             
             razorpay_order=razorpay_client.order.create(order_data)
            
-            print("Razorpay Order Created:", razorpay_order)
             return jsonify({
                 'order_id' : razorpay_order['id'],
                 'amount' : razorpay_order['amount'],
@@ -110,6 +109,7 @@ class VerifyPayment(Resource):
     @jwt_required()
     def post(self):
         data=request.json
+        user_identity = json.loads(get_jwt_identity())
         razorpay_order_id=data['razorpay_order_id']
         razorpay_payment_id=data['razorpay_payment_id']
         razorpay_signature=data['razorpay_signature']
@@ -129,8 +129,21 @@ class VerifyPayment(Resource):
             if campaign:
                 campaign.raised_amount += amount
                 db.session.commit()
+                
+            
+            transaction = Transaction(
+                user_id=user_identity['id'],
+                campaign_id=campaign_id,
+                campaign_title=campaign.title,
+                campaign_goal_amount=campaign.goal_amount,
+                amount=amount
+            )
+            print(f'Here is your transaction details {transaction.to_dict()}')
+            
+            db.session.add(transaction)
+            db.session.commit()
                
-            return jsonify({'success': True,'msg' : "Payment is verified SuccessFully and Campaign is Updated SuccessFully"})
+            return jsonify({'success': True,'msg' : "Payment is verified SuccessFully and Campaign is Updated SuccessFully and Transaction Recorded SuccessFully"})
         
         except Exception as e:
             return jsonify({'error' : str(e)})
@@ -192,6 +205,38 @@ class UserCampaigns(Resource):
         campaigns = Campaign.query.filter_by(creator_id=user_id).all()
         return jsonify({'campaigns': [campaign.to_dict() for campaign in campaigns]})
     
+class Transactions(Resource):
+    @jwt_required()
+    def get(self):
+        user_identity = json.loads(get_jwt_identity())
+        print("User identity:", user_identity)
+        transactions = Transaction.query.filter_by(user_id=user_identity['id']).all()
+        print("Fetched transactions:", [t.to_dict() for t in transactions])
+        return jsonify({'transactions': [d.to_dict() for d in transactions]})
+
+
+class DownloadReceipt(Resource):
+    @jwt_required()
+    def get(self, id):
+        user_identity = json.loads(get_jwt_identity())
+        transaction = Transaction.query.get_or_404(id)
+        
+        if transaction.user_id != user_identity['id']:
+            return jsonify({"msg": "Unauthorized to access this receipt"}), 403
+
+        buffer = io.BytesIO()
+        pdf = canvas.Canvas(buffer, pagesize=letter)
+        pdf.drawString(100, 750, "Transaction Receipt")
+        pdf.drawString(100, 730, f"Donor ID: {transaction.user_id}")
+        pdf.drawString(100, 710, f"Campaign ID: {transaction.campaign_id}")
+        pdf.drawString(100, 690, f"Campaign Title: {transaction.campaign_title}")
+        pdf.drawString(100, 670, f"Goal Amount: INR {transaction.campaign_goal_amount}")
+        pdf.drawString(100, 650, f"Donated Amount: INR {transaction.amount}")
+        ##pdf.drawString(100, 690, f"Date: {transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+        pdf.save()
+        buffer.seek(0)
+
+        return send_file(buffer, mimetype='application/pdf', as_attachment=True, download_name=f"Receipt_{transaction.id}.pdf")    
 
 class Test_Route(Resource):
     def get(self):

@@ -1,6 +1,7 @@
 from . import db
 from flask_bcrypt import generate_password_hash, check_password_hash
 from sqlalchemy.schema import UniqueConstraint, ForeignKeyConstraint
+from datetime import datetime
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -60,4 +61,26 @@ class Campaign(db.Model):
             'creator': self.creator.to_dict(),  # Include user info in response
             'is_approved': self.is_approved,
             'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+class Transaction(db.Model):
+    __tablename__ = 'transactions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), nullable=False)
+    campaign_title = db.Column(db.String(100), nullable=False, server_default="Untitled Campaign")
+    campaign_goal_amount = db.Column(db.Float, nullable=False, server_default='0.0')
+    amount = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "campaign_id": self.campaign_id,
+            "campaign_title": self.campaign_title,
+            "campaign_goal_amount": self.campaign_goal_amount,  
+            "amount": self.amount,
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None
         }

@@ -19,8 +19,6 @@ const CampaignList=() => {
     const handleDonate=async(campaign,amount) => {
         try{
             const {data} =await donateToCampaign(campaign.id,amount);
-            console.log('Here is your fucking data',data)
-            console.log('Here is Fucking data order_id',data.order_id)
             const razorpayOptions={
                 key : process.env.REACT_APP_RAZORPAY_KEY_ID,
                 amount : data.amount,
@@ -29,14 +27,7 @@ const CampaignList=() => {
                 name : "Great Cause",
                 decription : "CrowdFunding Platform to Support Campaigns",
                 handler : async function (response){
-                    try{
-                        console.log({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                            campaign_id: campaign.id,
-                            amount: data.amount,
-                          });                          
+                    try{                    
                     await verifyPayment({
                     razorpay_order_id: response.razorpay_order_id,
                     razorpay_payment_id: response.razorpay_payment_id,
@@ -47,7 +38,6 @@ const CampaignList=() => {
                     alert("Payment SucceFully");
 
                     const { data: updatedCampaigns } = await getCampaigns();
-                    console.log(updatedCampaigns)
                     setCampaigns(updatedCampaigns);
                 }catch(e){
                     console.log(e,"Payment Verification has Failed")
@@ -69,8 +59,8 @@ const CampaignList=() => {
                 <div key={campaign.id} className="campaign-card">
                     <h3>{campaign.title}</h3>
                     <p>{campaign.description}</p>
-                    <p>Goal Amount :{campaign.goal_amount}</p>
-                    <p>Raised Amount :{campaign.raised_amount}</p>
+                    <p>Goal Amount :Rs {campaign.goal_amount}</p>
+                    <p>Raised Amount :Rs {campaign.raised_amount}</p>
                     <button onClick={() => setSelectedCampaign(campaign)}>Donate</button>
                 </div>
             ))}

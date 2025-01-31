@@ -5,6 +5,7 @@ import CreateCampaign from "./pages/CreateCampaign";
 import Login from "./auth/Login";
 import Register from "./auth/Register";
 import Profile from "./auth/Profile";
+import TransactionHistory from "./components/TransactionHistory"; 
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -55,6 +56,9 @@ function App() {
             <NavLink to="/profile" className={({ isActive }) => (isActive ? "active" : "")}>
               Profile
             </NavLink>
+            <NavLink to="/transactions" className={({ isActive }) => (isActive ? "active" : "")}>
+              Transaction History
+            </NavLink> 
             <div style={{ display: "inline-block", marginLeft: "10px" }}>
               <button onClick={handleLogout} style={{ cursor: "pointer" }}>
                 Logout
@@ -76,6 +80,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/create" element={<ProtectedRoute element={<CreateCampaign />} />} />
         <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
+        <Route path="/transactions" element={<ProtectedRoute element={<TransactionHistory />} />} /> 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>

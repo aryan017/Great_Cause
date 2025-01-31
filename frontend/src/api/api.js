@@ -8,11 +8,9 @@ const API=axios.create({
 API.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem("token");
-      console.log("Token in Axios Interceptor:", token); 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      console.log("Request Config:", config); 
       return config;
     },
     (error) => Promise.reject(error)
@@ -41,3 +39,5 @@ export const login=(data) => API.post('/login',data);
 export const fetchProfile = () => API.get('/profile');
 export const updateProfile = (data) => API.put('/profile', data);
 export const fetchUserCampaigns = () => API.get('/profile/campaigns');
+export const fetchTransactions=() => API.get('/transactions')
+export const downloadRecepit=(id) => API.get(`/downloadRecepit/${id}`)

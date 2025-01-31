@@ -5,3 +5,4 @@ Flask-CORS
 Flask-RESTful
 razorpay
 python-dotenv
+reportlab
