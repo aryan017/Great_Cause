@@ -1,6 +1,7 @@
 import React,{useEffect,useState} from "react";
 import {getCampaigns,donateToCampaign, verifyPayment} from "../api/api";
 import DonateModal from "./DonateModal";
+import ShareCampaign from "./ShareCampaign";
 import '../index.css';
 
 const CampaignList=() => {
@@ -61,6 +62,7 @@ const CampaignList=() => {
                     <p>{campaign.description}</p>
                     <p>Goal Amount :Rs {campaign.goal_amount}</p>
                     <p>Raised Amount :Rs {campaign.raised_amount}</p>
+                    <ShareCampaign campaign={campaign} />
                     <button onClick={() => setSelectedCampaign(campaign)}>Donate</button>
                 </div>
             ))}

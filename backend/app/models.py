@@ -41,6 +41,7 @@ class Campaign(db.Model):
     creator_id = db.Column(db.Integer, nullable=False)
     is_approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+    share_count = db.Column(db.Integer, default=0) 
 
     # Add foreign key constraint with a name
     __table_args__ = (
@@ -60,7 +61,8 @@ class Campaign(db.Model):
             'raised_amount': self.raised_amount,
             'creator': self.creator.to_dict(),  # Include user info in response
             'is_approved': self.is_approved,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'share_count': self.share_count
         }
 
 class Transaction(db.Model):

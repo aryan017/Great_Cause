@@ -69,7 +69,20 @@ class CampaignDetail(Resource):
         db.session.delete(campaign)
         db.session.commit()
         return jsonify({"msg" : f"Campaign {id} is Deleted"})
-        
+    
+class Share_Campaign(Resource):
+    @jwt_required()
+    def post(self,id):
+        campaign = Campaign.query.get(id)
+        if not campaign:
+            return jsonify({'error': 'Campaign not found'}), 404
+      
+        if campaign.share_count is None:
+            campaign.share_count = 0
+        campaign.share_count += 1
+        db.session.commit()
+    
+        return jsonify({'message': 'Campaign shared successfully!', 'share_count': campaign.share_count})    
     
 class Donate(Resource):
     @jwt_required()
