@@ -6,3 +6,4 @@ Flask-RESTful
 razorpay
 python-dotenv
 reportlab
+mailjet-rest

@@ -4,6 +4,7 @@ from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity
 from dotenv import load_dotenv
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from mailjet_rest import Client
 from .models import Campaign, User, Transaction
 from . import db
 import json
@@ -119,10 +120,27 @@ class ApproveCampaign(Resource):
         return jsonify({'msg' : 'Campaign is Approved'})
     
 class VerifyPayment(Resource):
+
+    @staticmethod
+    def send_email(to_email, subject, message):
+        """Send email using Mailjet"""
+        mailjet = Client(auth=(os.getenv("MAILJET_API_KEY"), os.getenv("MAILJET_SECRET_KEY")), version='v3.1')
+        data = {
+            'Messages': [{
+                "From": {"Email": os.getenv("MAILJET_SENDER_EMAIL"), "Name": "Great_Cause"},
+                "To": [{"Email": to_email}],
+                "   Subject": subject,
+                "TextPart": message
+            }]
+        }
+        result = mailjet.send.create(data=data)
+        return result.status_code, result.json()
+
     @jwt_required()
     def post(self):
         data=request.json
         user_identity = json.loads(get_jwt_identity())
+        user=User.query.get(user_identity['id'])
         razorpay_order_id=data['razorpay_order_id']
         razorpay_payment_id=data['razorpay_payment_id']
         razorpay_signature=data['razorpay_signature']
@@ -155,6 +173,12 @@ class VerifyPayment(Resource):
             
             db.session.add(transaction)
             db.session.commit()
+            
+            VerifyPayment.send_email(
+            to_email=campaign.creator.email,
+            subject="🎉 New Donation Received!",
+            message=f"Your campaign '{campaign.title}' just received a donation of Rs {amount} from {user.username}!"
+            )
                
             return jsonify({'success': True,'msg' : "Payment is verified SuccessFully and Campaign is Updated SuccessFully and Transaction Recorded SuccessFully"})
         
