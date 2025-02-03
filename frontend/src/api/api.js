@@ -42,3 +42,7 @@ export const updateProfile = (data) => API.put('/profile', data);
 export const fetchUserCampaigns = () => API.get('/profile/campaigns');
 export const fetchTransactions=() => API.get('/transactions')
 export const downloadRecepit=(id) => API.get(`/downloadRecepit/${id}`)
+export const fetchComment = (id) => API.get(`/campaigns/${id}/comments`);
+export const addComment = (id,data) => API.post(`/campaigns/${id}/comments`,data);
+export const likeComment=(id) => API.put(`/comments/${id}/like`)
+export const dislikeComment=(id) => API.put(`/comments/${id}/dislike`)

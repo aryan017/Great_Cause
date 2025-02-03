@@ -8,7 +8,6 @@ const TransactionHistory = () => {
     const fetchingTransactions = async () => {
       try {
         const res = await fetchTransactions();
-        console.log(res)
         setTransactions(res.data.transactions);
       } catch (err) {
         console.error("Error fetching transactions:", err);

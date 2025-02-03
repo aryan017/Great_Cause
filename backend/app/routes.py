@@ -1,5 +1,5 @@
 from flask_restful import Api
-from .controllers import CampaignList, CampaignDetail,Profile,UserCampaigns, Share_Campaign, Donate, Transactions, DownloadReceipt, ApproveCampaign,Test_Route,VerifyPayment, Register,Login
+from .controllers import CampaignList, CampaignDetail,Profile,UserCampaigns,Campaign_Comment, LIKE_Comment, DISLIKE_Comment, Share_Campaign, Donate, Transactions, DownloadReceipt, ApproveCampaign,Test_Route,VerifyPayment, Register,Login
 
 api=Api()
 
@@ -16,5 +16,8 @@ def init_app(app):
     api.add_resource(VerifyPayment,'/payments/verify')
     api.add_resource(Transactions,'/transactions')
     api.add_resource(DownloadReceipt,'/downloadRecepit/<int:id>')
+    api.add_resource(Campaign_Comment,'/campaigns/<int:id>/comments')
+    api.add_resource(LIKE_Comment,'/comments/<int:id>/like')
+    api.add_resource(DISLIKE_Comment,'/comments/<int:id>/dislike')
     api.add_resource(Test_Route,'/test')
     api.init_app(app)

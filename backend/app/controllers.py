@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from mailjet_rest import Client
-from .models import Campaign, User, Transaction
+from .models import Campaign, User, Transaction, Comment
 from . import db
 import json
 import io
@@ -246,9 +246,7 @@ class Transactions(Resource):
     @jwt_required()
     def get(self):
         user_identity = json.loads(get_jwt_identity())
-        print("User identity:", user_identity)
         transactions = Transaction.query.filter_by(user_id=user_identity['id']).all()
-        print("Fetched transactions:", [t.to_dict() for t in transactions])
         return jsonify({'transactions': [d.to_dict() for d in transactions]})
 
 
@@ -274,6 +272,51 @@ class DownloadReceipt(Resource):
         buffer.seek(0)
 
         return send_file(buffer, mimetype='application/pdf', as_attachment=True, download_name=f"Receipt_{transaction.id}.pdf")    
+
+class Campaign_Comment(Resource):
+    @jwt_required()
+    def get(self,id):
+        comments = Comment.query.filter_by(campaign_id=id).all()
+        return jsonify([comment.to_dict() for comment in comments])
+    
+    @jwt_required()
+    def post(self,id):
+        user_id = get_jwt_identity()
+        data = request.get_json()
+        content = data.get('content')
+    
+        if not content:
+            return jsonify({'error': 'Content is required'}), 400
+    
+        new_comment = Comment(campaign_id=id, user_id=user_id, content=content)
+        db.session.add(new_comment)
+        db.session.commit()
+    
+        return jsonify(new_comment.to_dict()), 201
+    
+class LIKE_Comment(Resource):
+    @jwt_required()
+    def put(self,id):
+        comment = Comment.query.get(id)
+        if not comment:
+            return jsonify({'error': 'Comment not found'}), 404
+        if comment.likes is None:
+            comment.likes = 0
+        comment.likes += 1
+        db.session.commit()
+        return jsonify(comment.to_dict())
+    
+class DISLIKE_Comment(Resource):
+    @jwt_required()
+    def put(self,id):
+        comment = Comment.query.get(id)
+        if not comment:
+            return jsonify({'error': 'Comment not found'}), 404
+        if comment.dislikes is None:
+            comment.dislikes = 0
+        comment.dislikes += 1
+        db.session.commit()
+        return jsonify(comment.to_dict())
 
 class Test_Route(Resource):
     def get(self):
