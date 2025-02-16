@@ -1,4 +1,4 @@
-from . import db
+from . import db 
 from flask_bcrypt import generate_password_hash, check_password_hash
 from sqlalchemy.schema import UniqueConstraint, ForeignKeyConstraint
 from datetime import datetime
@@ -105,7 +105,6 @@ class Comment(db.Model):
             'id': self.id,
             'campaign_id': self.campaign_id,
             'user_id': self.user_id,
-            ##'user' : self.user.to_dict(),
             'content': self.content,
             'likes': self.likes,
             'dislikes': self.dislikes,

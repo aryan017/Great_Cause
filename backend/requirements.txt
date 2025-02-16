@@ -7,3 +7,9 @@ razorpay
 python-dotenv
 reportlab
 mailjet-rest
+authlib
+flask-oauthlib
+flask-login
+google-auth
+google-auth-oauthlib
+google-auth-httplib2 

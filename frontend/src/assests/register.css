@@ -1,0 +1,94 @@
+.register-form {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 25px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+h2 {
+    color: #222;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #333;
+    font-size: 14px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: 0.3s ease;
+}
+
+input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.5);
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* Register Button */
+button[type="submit"] {
+    background: #28a745;
+    color: white;
+}
+
+button[type="submit"]:hover {
+    background: #218838;
+}
+
+/* Google Login Button */
+.google-login {
+    background: #db4437;
+    color: white;
+    margin-top: 10px;
+}
+
+.google-login:hover {
+    background: #b33224;
+}
+
+.error {
+    color: #dc3545;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+
+@media (max-width: 500px) {
+    .register-form {
+        width: 90%;
+        padding: 20px;
+    }
+}

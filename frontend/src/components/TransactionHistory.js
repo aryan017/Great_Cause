@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchTransactions,downloadRecepit } from "../api/api";
+import "../assests/transactions.css"
 
 const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);

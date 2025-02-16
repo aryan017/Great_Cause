@@ -1,6 +1,6 @@
 import React,{useState} from "react";
 import { createCampaigns } from "../api/api";
-import '../index.css';
+import '../assests/campaign.css';
 
 const CampaignForm=() => {
     const [formData,setFormData] = useState({

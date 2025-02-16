@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchComment,addComment,likeComment,dislikeComment } from "../api/api";
+import "../assests/comments.css"
 
 const CommentSection = ({campaignId}) => {
   const [comments, setComments] = useState([]);

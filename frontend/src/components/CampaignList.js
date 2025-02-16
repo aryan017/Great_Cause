@@ -3,7 +3,7 @@ import { getCampaigns, donateToCampaign, verifyPayment } from "../api/api";
 import DonateModal from "./DonateModal";
 import ShareCampaign from "./ShareCampaign";
 import CommentSection from "./CommentSection";
-import '../index.css';
+import '../assests/campaigns.css';
 
 const CampaignList = () => {
     const [campaigns, setCampaigns] = useState([]);

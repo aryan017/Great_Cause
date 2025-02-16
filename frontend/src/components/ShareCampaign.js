@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import {
     FacebookShareButton,
-    TwitterShareButton,
+    TelegramShareButton,
     WhatsappShareButton,
     LinkedinShareButton,
 } from "react-share";
-import { FaFacebook, FaTwitter, FaWhatsapp, FaLinkedin } from "react-icons/fa"; 
+import { FaFacebook, FaTelegram, FaWhatsapp, FaLinkedin } from "react-icons/fa"; 
 import { shareCampaign } from "../api/api";
+import "../assests/shares.css"
 
 const ShareCampaign = ({ campaign }) => {
     const [shareCount, setShareCount] = useState(campaign.share_count);
@@ -54,18 +55,18 @@ const ShareCampaign = ({ campaign }) => {
                 </FacebookShareButton>
 
 
-                <TwitterShareButton
+               <TelegramShareButton
                     url={shareUrl}
                     title={shareMessage}
                     onClick={handleShare}
                     className="flex items-center justify-center"
                 >
-                    <FaTwitter
+                    <FaTelegram
                         size={40}
                         className="text-[#1DA1F2] hover:scale-110 transition-transform cursor-pointer"
-                        title="Share on Twitter"
+                        title="Share on Telegram"
                     />
-                </TwitterShareButton>
+                </TelegramShareButton> 
 
 
                 <WhatsappShareButton

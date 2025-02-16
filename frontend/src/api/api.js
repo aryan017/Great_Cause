@@ -37,9 +37,13 @@ export const verifyPayment=(paymentData) => API.post('/payments/verify',paymentD
     headers: { "Content-Type": "application/json" }});
 export const register=(data) => API.post('/register',data);
 export const login=(data) => API.post('/login',data);
-export const fetchProfile = () => API.get('/profile');
-export const updateProfile = (data) => API.put('/profile', data);
-export const fetchUserCampaigns = () => API.get('/profile/campaigns');
+//export const fetchProfile = () => API.get('/profile');
+//export const updateProfile = (data) => API.put('/profile', data);
+//export const fetchUserCampaigns = () => API.get('/profile/campaigns');
+export const googleLogin=() => API.get('/authorize')
+export const updateCampaign = (id, data) => API.put(`/user_campaigns/${id}`, data);
+export const deleteCampaign=(id) => API.delete(`/user_campaigns/${id}`)
+export const getUserCampaigns=() => API.get('/user_campaigns')
 export const fetchTransactions=() => API.get('/transactions')
 export const downloadRecepit=(id) => API.get(`/downloadRecepit/${id}`)
 export const fetchComment = (id) => API.get(`/campaigns/${id}/comments`);

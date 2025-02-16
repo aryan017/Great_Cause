@@ -1,0 +1,68 @@
+.share-campaign {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .share-campaign p {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #1a202c;
+  }
+  
+  .social-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .social-buttons .flex {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    padding: 10px;
+  }
+  
+  .social-buttons .flex:hover {
+    transform: scale(1.1);
+    background-color: #e0e0e0;
+  }
+  
+  .social-buttons svg {
+    transition: color 0.3s ease;
+  }
+  
+  .social-buttons svg:hover {
+    color: #333;
+  }
+  
+  .text-blue-600 {
+    color: #1d4ed8;
+  }
+  
+  .text-red-500 {
+    color: #ef4444;
+  }
+  
+  .text-sm {
+    font-size: 14px;
+  }
+  
+  .text-gray-500 {
+    color: #6b7280;
+  }
+  
+  .max-w-sm {
+    max-width: 400px;
+  }
+  
+  .mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  

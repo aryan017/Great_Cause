@@ -1,4 +1,4 @@
-from flask import request,jsonify,send_file
+from flask import request,jsonify,send_file, session, redirect, url_for
 from flask_restful import Resource
 from flask_jwt_extended import create_access_token,jwt_required,get_jwt_identity
 from dotenv import load_dotenv
@@ -6,7 +6,10 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from mailjet_rest import Client
 from .models import Campaign, User, Transaction, Comment
+import google.oauth2.credentials
+import google_auth_oauthlib.flow
 from . import db
+import flask
 import json
 import io
 import os
@@ -14,7 +17,20 @@ import razorpay
 
 load_dotenv() 
 
+CLIENT_SECRETS_FILE = "client_secret.json"
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
 razorpay_client = razorpay.Client(auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")))
+
+if os.path.exists(CLIENT_SECRETS_FILE):
+    with open(CLIENT_SECRETS_FILE, "r") as f:
+        client_secrets = json.load(f)
+else:
+    raise FileNotFoundError("client_secret.json not found!")
+
+SCOPES = ['https://www.googleapis.com/auth/userinfo.email',
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'openid']
 
 class CampaignList(Resource):
     def get(self):
@@ -211,36 +227,49 @@ class Login(Resource):
         
         access_token = create_access_token(identity=json.dumps({'id': user.id, 'username': user.username}))
         return jsonify({'token' : access_token , 'user' : user.to_dict()})
-    
-class Profile(Resource):
-    @jwt_required()
-    def get(self):
-        user_id =get_jwt_identity()
-        user = User.query.get_or_404(user_id, description="User not found")
-        return jsonify(user.to_dict())
-
-    @jwt_required()
-    def put(self):
-        user_id = get_jwt_identity()
-        user = User.query.get_or_404(user_id, description="User not found")
-        
-        try:
-            data = request.get_json()
-            user.username = data.get('username', user.username)
-            user.email = data.get('email', user.email)
-            db.session.commit()
-            return jsonify({'message': 'Profile updated successfully', 'user': user.to_dict()})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'error': 'Failed to update profile', 'details': str(e)}), 500
-
 
 class UserCampaigns(Resource):
     @jwt_required()
     def get(self):
-        user_id =get_jwt_identity()
-        campaigns = Campaign.query.filter_by(creator_id=user_id).all()
+        user_id =json.loads(get_jwt_identity())
+        campaigns = Campaign.query.filter_by(creator_id=user_id['id']).all()
         return jsonify({'campaigns': [campaign.to_dict() for campaign in campaigns]})
+    
+class DeleteCampaign(Resource):
+    @jwt_required()
+    def delete(self,id):
+        user_id =json.loads(get_jwt_identity())
+        campaign = Campaign.query.get_or_404(id)
+        if campaign.creator_id != user_id['id']:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        Comment.query.filter_by(campaign_id=id).delete()
+
+        db.session.delete(campaign)
+        db.session.commit()
+        return jsonify({"message": "Campaign deleted successfully"}), 200
+    
+class UpdateCampaign(Resource):
+    @jwt_required()
+    def put(self,id):
+        user_id = json.loads(get_jwt_identity())
+        campaign = Campaign.query.get_or_404(id)
+        if campaign.creator_id != user_id['id']:
+            return jsonify({"error": "Unauthorized"}), 403
+        
+        data = request.get_json()
+        campaign.title = data.get("title", campaign.title)
+        campaign.description = data.get("description", campaign.description)
+        campaign.goal_amount = data.get("goal_amount", campaign.goal_amount)
+        
+        db.session.commit()
+        return jsonify({"message": "Campaign updated successfully", "campaign": {
+            "id": campaign.id,
+            "title": campaign.title,
+            "description": campaign.description,
+            "goal_amount": campaign.goal_amount
+        }}), 200
+        
     
 class Transactions(Resource):
     @jwt_required()
@@ -317,7 +346,78 @@ class DISLIKE_Comment(Resource):
         comment.dislikes += 1
         db.session.commit()
         return jsonify(comment.to_dict())
+    
+class GoogleAuthorize(Resource):
+    def get(self):
+        flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES)
 
+        flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
+
+        authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true')
+        flask.session['state'] = state
+        print("Authorization URL:", authorization_url)
+
+        return flask.redirect(authorization_url)
+    
+class GoogleOauthCallback(Resource):
+    def get(self):
+        print("Callback URL triggered:", flask.request.url)
+        print("Request args:", flask.request.args)
+
+        # Debugging state
+        state = flask.session.get('state')
+        print("Session state:", state)
+        print("Request state:", flask.request.args.get('state'))
+
+        flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
+        flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
+
+        authorization_response = flask.request.url
+        flow.fetch_token(authorization_response=authorization_response)
+
+        credentials = flow.credentials
+  
+        credentials = self.credentials_to_dict(credentials)
+        flask.session['credentials'] = credentials
+
+        features = self.check_granted_scopes(credentials)
+        flask.session['features'] = features
+        return flask.jsonify({'access_token': credentials['token']})
+
+    
+    @staticmethod
+    def credentials_to_dict(credentials):
+        return {'token': credentials.token,
+            'refresh_token': credentials.refresh_token,
+            'token_uri': credentials.token_uri,
+            'client_id': credentials.client_id,
+            'client_secret': credentials.client_secret,
+            'granted_scopes': credentials.granted_scopes}
+        
+    @staticmethod
+    def check_granted_scopes(credentials):
+        features = {}
+        if 'https://www.googleapis.com/auth/userinfo.email' in credentials['granted_scopes']:
+            features['email'] = True
+        else:
+            features['email'] = False
+
+        if 'https://www.googleapis.com/auth/userinfo.profile' in credentials['granted_scopes']:
+            features['profile'] = True
+        else:
+            features['profile'] = False
+            
+        if 'https://www.googleapis.com/auth/openid' in credentials['granted_scopes']:
+            features['openid'] = True
+        else:
+            features['openid'] = False
+
+        return features
+        
 class Test_Route(Resource):
     def get(self):
         return jsonify({'msg':'Server is working'})

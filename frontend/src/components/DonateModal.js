@@ -1,5 +1,5 @@
 import React,{useState} from "react";
-import '../index.css';
+import '../assests/donate.css';
 
 const DonateModal=({campaign,onClose,onDonate}) => {
        const [amount,setAmount]=useState(0);
