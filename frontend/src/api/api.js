@@ -50,3 +50,5 @@ export const fetchComment = (id) => API.get(`/campaigns/${id}/comments`);
 export const addComment = (id,data) => API.post(`/campaigns/${id}/comments`,data);
 export const likeComment=(id) => API.put(`/comments/${id}/like`)
 export const dislikeComment=(id) => API.put(`/comments/${id}/dislike`)
+export const updateComment=(id,data) => API.put(`/campaigns/${id}/comments`,data)
+export const deleteComment=(id) => API.delete(`/campaigns/${id}/comments`)

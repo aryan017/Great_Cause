@@ -77,6 +77,7 @@ const Register = () => {
         />
       </div>
       <button type="submit">Register</button>
+      
       <button type="button" onClick={login} className="google-login">
         Sign up with Google
       </button>

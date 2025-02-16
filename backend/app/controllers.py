@@ -323,6 +323,43 @@ class Campaign_Comment(Resource):
     
         return jsonify(new_comment.to_dict()), 201
     
+    @jwt_required()
+    def put(self, id):
+        user_id = get_jwt_identity()
+        data = request.get_json()
+        content = data.get('content')
+
+        if not content:
+            return jsonify({'error': 'Content is required'}), 400
+
+        comment = Comment.query.get(id)
+        if not comment:
+            return jsonify({'error': 'Comment not found'}), 404
+
+        if comment.user_id != user_id:
+            return jsonify({'error': 'Unauthorized to update this comment'}), 403
+
+        comment.content = content
+        db.session.commit()
+
+        return jsonify(comment.to_dict())
+
+    @jwt_required()
+    def delete(self, id):
+        user_id = get_jwt_identity()
+        comment = Comment.query.get(id)
+
+        if not comment:
+            return jsonify({'error': 'Comment not found'}), 404
+
+        if comment.user_id != user_id:
+            return jsonify({'error': 'Unauthorized to delete this comment'}), 403
+
+        db.session.delete(comment)
+        db.session.commit()
+
+        return jsonify({'message': 'Comment deleted successfully'}), 200
+    
 class LIKE_Comment(Resource):
     @jwt_required()
     def put(self,id):
